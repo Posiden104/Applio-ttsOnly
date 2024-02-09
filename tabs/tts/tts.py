@@ -202,6 +202,7 @@ def process_input(file_path):
     return file_contents, None
 
 def process_json_input(json_text):
+    global use_json, parts
     json_data = json.loads(json_text)
     parts = json_data["parts"]
     use_json = True
@@ -223,6 +224,9 @@ def prepare_tts_script(
     # pth_file,
     # index_path,
 ):
+    global use_json, parts
+    print(use_json)
+    print(parts)
     if not use_json:
         tts_input = f'{tts_title}. Part {tts_part} of {tts_part_total}. {tts_text}' if tts_part_total > 0 else f'{tts_title}. {tts_text}'
         return run_tts_script(
@@ -239,7 +243,7 @@ def prepare_tts_script(
             # index_path,
         )
     else:
-        for i, tts_body in parts:
+        for i, tts_body in enumerate(parts):
             tts_input =f'{tts_title}. {tts_body}'
             result = run_tts_script(
                 tts_input,
@@ -310,7 +314,7 @@ def tts_tab():
     output_tts_path = gr.Textbox(
         label=i18n("Base Output Path for TTS Audio"),
         placeholder=i18n("Enter output path"),
-        value=os.path.join("D:\_TikTok\Sounds"),
+        value=os.path.join("C:\Git\Applio-ttsOnly\\assets\\audios"),
         interactive=True,
     )
 
@@ -322,37 +326,31 @@ def tts_tab():
                     placeholder=i18n("Enter Title"),
                     lines=3,
                 )
-                with gr.Column():
-                    tts_part = gr.Number(
-                        label=i18n("Part"), 
-                        value=0,
-                        interactive=True,
-                    )
-                    tts_part_total = gr.Number(
-                        label=i18n("Part total"),
-                        value=0,
-                        interactive=True,
-                    )
+                with gr.Accordion(i18n("Part Details"), open=False):
+                    with gr.Column():
+                        tts_part = gr.Number(
+                            label=i18n("Part"), 
+                            value=0,
+                            interactive=True,
+                        )
+                        tts_part_total = gr.Number(
+                            label=i18n("Part total"),
+                            value=0,
+                            interactive=True,
+                        )
 
-            tts_text = gr.Textbox(
-                label=i18n("Text to Synthesize"),
-                placeholder=i18n("Enter text"),
-                lines=3,
-                interactive=True,
-            )
+                    tts_text = gr.Textbox(
+                        label=i18n("Text to Synthesize"),
+                        placeholder=i18n("Enter text"),
+                        lines=3,
+                        interactive=True,
+                    )
 
             json_text = gr.Textbox(
                 label=i18n("Json input"),
                 placeholder=i18n("Enter text"),
                 lines=3,
                 interactive=True,
-            )
-
-            convert_json_button1 = gr.Button(i18n("Convert Json"))
-            convert_json_button1.click(
-                fn=process_json_input,
-                inputs=[json_text],
-                outputs=[tts_title, tts_part_total]
             )
 
     with gr.Accordion(i18n("File Upload"), open=False):
@@ -418,7 +416,16 @@ def tts_tab():
                 interactive=True,
             )
 
-    convert_button1 = gr.Button(i18n("Convert"))
+    with gr.Row():
+        load_json_button1 = gr.Button(i18n("Load Json"))
+        convert_button1 = gr.Button(i18n("Convert"))
+        
+
+    load_json_button1.click(
+        fn=process_json_input,
+        inputs=[json_text],
+        outputs=[tts_title, tts_part_total]
+    )
 
     with gr.Row():  # Defines output info + output audio download after conversion
         vc_output1 = gr.Textbox(label=i18n("Output Information"))
