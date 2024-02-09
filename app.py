@@ -47,17 +47,17 @@ with gr.Blocks(theme=my_applio, title="Applio") as Applio:
             "[Support](https://discord.gg/IAHispano) — [Discord Bot](https://discord.com/oauth2/authorize?client_id=1144714449563955302&permissions=1376674695271&scope=bot%20applications.commands) — [Find Voices](https://applio.org/models) — [GitHub](https://github.com/IAHispano/Applio)"
         )
     )
-    with gr.Tab(i18n("Inference")):
-        inference_tab()
+    # with gr.Tab(i18n("Inference")):
+    #     inference_tab()
 
-    with gr.Tab(i18n("Train")):
-        train_tab()
+    # with gr.Tab(i18n("Train")):
+    #     train_tab()
 
     with gr.Tab(i18n("TTS")):
         tts_tab()
 
-    with gr.Tab(i18n("Extra")):
-        extra_tab()
+    # with gr.Tab(i18n("Extra")):
+    #     extra_tab()
 
     with gr.Tab(i18n("Plugins")):
         plugins_tab()

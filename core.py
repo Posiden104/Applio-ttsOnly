@@ -122,12 +122,12 @@ def run_tts_script(
     hop_length,
     f0method,
     output_tts_path,
-    output_rvc_path,
-    pth_file,
-    index_path,
+    # output_rvc_path,
+    # pth_file,
+    # index_path,
 ):
     tts_script_path = os.path.join("rvc", "lib", "tools", "tts.py")
-    infer_script_path = os.path.join("rvc", "infer", "infer.py")
+    # infer_script_path = os.path.join("rvc", "infer", "infer.py")
 
     if os.path.exists(output_tts_path):
         os.remove(output_tts_path)
@@ -140,22 +140,22 @@ def run_tts_script(
         output_tts_path,
     ]
 
-    command_infer = [
-        "python",
-        infer_script_path,
-        str(f0up_key),
-        str(filter_radius),
-        str(index_rate),
-        str(hop_length),
-        f0method,
-        output_tts_path,
-        output_rvc_path,
-        pth_file,
-        index_path,
-    ]
+    # command_infer = [
+    #     "python",
+    #     infer_script_path,
+    #     str(f0up_key),
+    #     str(filter_radius),
+    #     str(index_rate),
+    #     str(hop_length),
+    #     f0method,
+    #     output_tts_path,
+    #     output_rvc_path,
+    #     pth_file,
+    #     index_path,
+    # ]
     subprocess.run(command_tts)
-    subprocess.run(command_infer)
-    return f"Text {tts_text} synthesized successfully.", output_rvc_path
+    # subprocess.run(command_infer)
+    return f"Text {tts_text} synthesized successfully.", output_tts_path
 
 
 # Preprocess

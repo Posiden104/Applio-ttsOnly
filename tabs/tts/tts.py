@@ -23,6 +23,10 @@ audio_root = os.path.join(now_dir, "assets", "audios")
 model_root_relative = os.path.relpath(model_root, now_dir)
 audio_root_relative = os.path.relpath(audio_root, now_dir)
 
+max_parts = 10
+parts = []
+use_json = False
+
 sup_audioext = {
     "wav",
     "mp3",
@@ -197,81 +201,174 @@ def process_input(file_path):
     gr.Info(f"The text from the txt file has been loaded!")
     return file_contents, None
 
+def process_json_input(json_text):
+    json_data = json.loads(json_text)
+    parts = json_data["parts"]
+    use_json = True
+    return json_data["title"], len(parts)
+
+def prepare_tts_script(
+    tts_title,
+    tts_part,
+    tts_part_total,
+    tts_text,
+    tts_voice,
+    f0up_key,
+    filter_radius,
+    index_rate,
+    hop_length,
+    f0method,
+    output_tts_path,
+    # output_rvc_path,
+    # pth_file,
+    # index_path,
+):
+    if not use_json:
+        tts_input = f'{tts_title}. Part {tts_part} of {tts_part_total}. {tts_text}' if tts_part_total > 0 else f'{tts_title}. {tts_text}'
+        return run_tts_script(
+            tts_input,
+            tts_voice,
+            f0up_key,
+            filter_radius,
+            index_rate,
+            hop_length,
+            f0method,
+            os.path.join(output_tts_path, f'{tts_title}_pt{tts_part}.wav' if tts_part_total > 0 else f'{tts_title}.wav'),
+            # output_rvc_path,
+            # pth_file,
+            # index_path,
+        )
+    else:
+        for i, tts_body in parts:
+            tts_input =f'{tts_title}. {tts_body}'
+            result = run_tts_script(
+                tts_input,
+                tts_voice,
+                f0up_key,
+                filter_radius,
+                index_rate,
+                hop_length,
+                f0method,
+                os.path.join(output_tts_path, f'{tts_title}_pt{i + 1}.wav'),
+                # output_rvc_path,
+                # pth_file,
+                # index_path,
+            )
+        return result
 
 def tts_tab():
     default_weight = random.choice(names) if names else ""
-    with gr.Row():
-        with gr.Row():
-            model_file = gr.Dropdown(
-                label=i18n("Voice Model"),
-                choices=sorted(names, key=lambda path: os.path.getsize(path)),
-                interactive=True,
-                value=default_weight,
-                allow_custom_value=True,
-            )
-            best_default_index_path = match_index(model_file.value)
-            index_file = gr.Dropdown(
-                label=i18n("Index File"),
-                choices=get_indexes(),
-                value=best_default_index_path,
-                interactive=True,
-                allow_custom_value=True,
-            )
-        with gr.Column():
-            refresh_button = gr.Button(i18n("Refresh"))
-            unload_button = gr.Button(i18n("Unload Voice"))
+    # RVC Voice Stuff
+    # with gr.Row():
+    #     with gr.Row():
+    #         model_file = gr.Dropdown(
+    #             label=i18n("Voice Model"),
+    #             choices=sorted(names, key=lambda path: os.path.getsize(path)),
+    #             interactive=True,
+    #             value=default_weight,
+    #             allow_custom_value=True,
+    #         )
+    #         best_default_index_path = match_index(model_file.value)
+    #         index_file = gr.Dropdown(
+    #             label=i18n("Index File"),
+    #             choices=get_indexes(),
+    #             value=best_default_index_path,
+    #             interactive=True,
+    #             allow_custom_value=True,
+    #         )
+    #     with gr.Column():
+    #         refresh_button = gr.Button(i18n("Refresh"))
+    #         unload_button = gr.Button(i18n("Unload Voice"))
 
-            unload_button.click(
-                fn=lambda: ({"value": "", "__type__": "update"}),
-                inputs=[],
-                outputs=[model_file],
-            )
+    #         unload_button.click(
+    #             fn=lambda: ({"value": "", "__type__": "update"}),
+    #             inputs=[],
+    #             outputs=[model_file],
+    #         )
 
-            model_file.select(
-                fn=match_index,
-                inputs=[model_file],
-                outputs=[index_file],
-            )
+    #         model_file.select(
+    #             fn=match_index,
+    #             inputs=[model_file],
+    #             outputs=[index_file],
+    #         )
 
     json_path = os.path.join("rvc", "lib", "tools", "tts_voices.json")
     with open(json_path, "r") as file:
         tts_voices_data = json.load(file)
 
     short_names = [voice.get("ShortName", "") for voice in tts_voices_data]
+    
+    short_names = filter(lambda v: v.startswith("en-US") or v.startswith("en-GB"), short_names)
 
     tts_voice = gr.Dropdown(
         label=i18n("TTS Voices"),
         choices=short_names,
         interactive=True,
-        value=None,
+        value="en-US-AndrewNeural",
     )
 
-    tts_text = gr.Textbox(
-        label=i18n("Text to Synthesize"),
-        placeholder=i18n("Enter text to synthesize"),
-        lines=3,
+    output_tts_path = gr.Textbox(
+        label=i18n("Base Output Path for TTS Audio"),
+        placeholder=i18n("Enter output path"),
+        value=os.path.join("D:\_TikTok\Sounds"),
+        interactive=True,
     )
 
-    txt_file = gr.File(
-        label=i18n("Or you can upload a .txt file"),
-        type="filepath",
-    )
+    with gr.Row():
+        with gr.Column():
+            with gr.Row():
+                tts_title = gr.Textbox(
+                    label=i18n("Title"),
+                    placeholder=i18n("Enter Title"),
+                    lines=3,
+                )
+                with gr.Column():
+                    tts_part = gr.Number(
+                        label=i18n("Part"), 
+                        value=0,
+                        interactive=True,
+                    )
+                    tts_part_total = gr.Number(
+                        label=i18n("Part total"),
+                        value=0,
+                        interactive=True,
+                    )
+
+            tts_text = gr.Textbox(
+                label=i18n("Text to Synthesize"),
+                placeholder=i18n("Enter text"),
+                lines=3,
+                interactive=True,
+            )
+
+            json_text = gr.Textbox(
+                label=i18n("Json input"),
+                placeholder=i18n("Enter text"),
+                lines=3,
+                interactive=True,
+            )
+
+            convert_json_button1 = gr.Button(i18n("Convert Json"))
+            convert_json_button1.click(
+                fn=process_json_input,
+                inputs=[json_text],
+                outputs=[tts_title, tts_part_total]
+            )
+
+    with gr.Accordion(i18n("File Upload"), open=False):
+        txt_file = gr.File(
+            label=i18n("Or you can upload a .txt file"),
+            type="filepath",
+        )
 
     with gr.Accordion(i18n("Advanced Settings"), open=False):
         with gr.Column():
-            output_tts_path = gr.Textbox(
-                label=i18n("Output Path for TTS Audio"),
-                placeholder=i18n("Enter output path"),
-                value=os.path.join(now_dir, "assets", "audios", "tts_output.wav"),
-                interactive=True,
-            )
-
-            output_rvc_path = gr.Textbox(
-                label=i18n("Output Path for RVC Audio"),
-                placeholder=i18n("Enter output path"),
-                value=os.path.join(now_dir, "assets", "audios", "tts_rvc_output.wav"),
-                interactive=True,
-            )
+            # output_rvc_path = gr.Textbox(
+            #     label=i18n("Output Path for RVC Audio"),
+            #     placeholder=i18n("Enter output path"),
+            #     value=os.path.join(now_dir, "assets", "audios", "tts_rvc_output.wav"),
+            #     interactive=True,
+            # )
 
             pitch = gr.Slider(
                 minimum=-24,
@@ -327,19 +424,23 @@ def tts_tab():
         vc_output1 = gr.Textbox(label=i18n("Output Information"))
         vc_output2 = gr.Audio(label=i18n("Export Audio"))
 
-    refresh_button.click(
-        fn=change_choices,
-        inputs=[],
-        outputs=[model_file, index_file],
-    )
+    # refresh_button.click(
+    #     fn=change_choices,
+    #     inputs=[],
+    #     outputs=[model_file, index_file],
+    # )
     txt_file.upload(
         fn=process_input,
         inputs=[txt_file],
         outputs=[tts_text, txt_file],
     )
+        
     convert_button1.click(
-        fn=run_tts_script,
+        fn=prepare_tts_script,
         inputs=[
+            tts_title,
+            tts_part,
+            tts_part_total,
             tts_text,
             tts_voice,
             pitch,
@@ -348,9 +449,9 @@ def tts_tab():
             hop_length,
             f0method,
             output_tts_path,
-            output_rvc_path,
-            model_file,
-            index_file,
+            # output_rvc_path,
+            # model_file,
+            # index_file,
         ],
         outputs=[vc_output1, vc_output2],
     )
