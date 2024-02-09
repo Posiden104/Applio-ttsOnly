@@ -314,7 +314,7 @@ def tts_tab():
     output_tts_path = gr.Textbox(
         label=i18n("Base Output Path for TTS Audio"),
         placeholder=i18n("Enter output path"),
-        value=os.path.join("C:\Git\Applio-ttsOnly\\assets\\audios"),
+        value=os.path.join("D:\_TikTok\Sounds"),
         interactive=True,
     )
 
