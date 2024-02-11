@@ -7,13 +7,9 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 
 # Tabs
-from tabs.inference.inference import inference_tab
-from tabs.train.train import train_tab
-from tabs.extra.extra import extra_tab
 from tabs.report.report import report_tab
 from tabs.download.download import download_tab
 from tabs.tts.tts import tts_tab
-from tabs.settings.presence import presence_tab
 from tabs.settings.themes import theme_tab
 from tabs.plugins.plugins import plugins_tab
 
@@ -21,10 +17,15 @@ from tabs.plugins.plugins import plugins_tab
 import assets.themes.loadThemes as loadThemes
 from assets.i18n.i18n import I18nAuto
 import assets.installation_checker as installation_checker
-from assets.discord_presence import RPCManager
+
+from video_creation.background import (
+    download_background_video,
+    chop_background,
+    get_background_config,
+)
+from video_creation.final_video import make_final_video
 
 i18n = I18nAuto()
-RPCManager.start_presence()
 installation_checker.check_installation()
 logging.getLogger("uvicorn").disabled = True
 logging.getLogger("fairseq").disabled = True
@@ -69,11 +70,11 @@ with gr.Blocks(theme=my_applio, title="Applio") as Applio:
         report_tab()
 
     with gr.Tab(i18n("Settings")):
-        presence_tab()
         theme_tab()
 
 
 if __name__ == "__main__":
+    download_background_video(get_background_config("video"))
     Applio.launch(
         favicon_path="assets/ICON.ico",
         share="--share" in sys.argv,

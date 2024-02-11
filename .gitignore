@@ -127,3 +127,9 @@ venv.bak/
 
 # Cython debug symbols
 cython_debug/
+
+# background videos
+assets/backgrounds
+
+# temp
+assets/temp

@@ -14,34 +14,34 @@ del Dockerfile
 del docker-compose.yaml
 del /q *.sh
 
-if not exist "%cd%\env.zip" (
-    echo Downloading the fairseq build...
-    curl -s -LJO %URL_EXTRA%/env.zip -o env.zip
-)
+@REM if not exist "%cd%\env.zip" (
+@REM     echo Downloading the fairseq build...
+@REM     curl -s -LJO %URL_EXTRA%/env.zip -o env.zip
+@REM )
 
-if not exist "%cd%\env.zip" (
-    echo Download failed, trying with the powershell method
-    powershell -Command "& {Invoke-WebRequest -Uri '%URL_EXTRA%/env.zip' -OutFile 'mingit.zip'}"
-)
+@REM if not exist "%cd%\env.zip" (
+@REM     echo Download failed, trying with the powershell method
+@REM     powershell -Command "& {Invoke-WebRequest -Uri '%URL_EXTRA%/env.zip' -OutFile 'mingit.zip'}"
+@REM )
 
-if not exist "%cd%\env" (
-    echo Extracting the file...
-    powershell -command "& { Add-Type -AssemblyName System.IO.Compression.FileSystem ; [System.IO.Compression.ZipFile]::ExtractToDirectory('%cd%\env.zip', '%cd%') }"
-)
+@REM if not exist "%cd%\env" (
+@REM     echo Extracting the file...
+@REM     powershell -command "& { Add-Type -AssemblyName System.IO.Compression.FileSystem ; [System.IO.Compression.ZipFile]::ExtractToDirectory('%cd%\env.zip', '%cd%') }"
+@REM )
 
-if not exist "%cd%\env" (
-    echo Extracting failed trying with the tar method...
-    tar -xf %cd%\env.zip
-)
+@REM if not exist "%cd%\env" (
+@REM     echo Extracting failed trying with the tar method...
+@REM     tar -xf %cd%\env.zip
+@REM )
 
-if exist "%cd%\env" (
-    del env.zip
-) else (
-    echo Theres a problem extracting the file please download the file and extract it manually.
-    echo https://huggingface.co/IAHispano/applio/resolve/main/env.zip
-    pause
-    exit
-)
+@REM if exist "%cd%\env" (
+@REM     del env.zip
+@REM ) else (
+@REM     echo Theres a problem extracting the file please download the file and extract it manually.
+@REM     echo https://huggingface.co/IAHispano/applio/resolve/main/env.zip
+@REM     pause
+@REM     exit
+@REM )
 
 if not exist "%CONDA_EXECUTABLE%" (
     echo Downloading Miniconda from %MINICONDA_DOWNLOAD_URL%...
@@ -64,7 +64,7 @@ call "%CONDA_ROOT_PREFIX%\condabin\conda.bat" activate "%INSTALL_ENV_DIR%"
 pip install --upgrade setuptools
 pip install -r "%principal%\requirements.txt"
 pip uninstall torch torchvision torchaudio -y
-pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+@REM pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
 call "%CONDA_ROOT_PREFIX%\condabin\conda.bat" deactivate
 echo.
 

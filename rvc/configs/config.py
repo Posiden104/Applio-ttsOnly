@@ -4,7 +4,7 @@ import sys
 import json
 from multiprocessing import cpu_count
 
-import torch
+# import torch
 
 version_config_list = [
     "v1/32000.json",
@@ -48,20 +48,22 @@ class Config:
 
     @staticmethod
     def has_mps() -> bool:
-        if not torch.backends.mps.is_available():
-            return False
-        try:
-            torch.zeros(1).to(torch.device("mps"))
-            return True
-        except Exception:
-            return False
+        # if not torch.backends.mps.is_available():
+        #     return False
+        # try:
+        #     torch.zeros(1).to(torch.device("mps"))
+        #     return True
+        # except Exception:
+        #     return False
+        return False
 
     @staticmethod
     def has_xpu() -> bool:
-        if hasattr(torch, "xpu") and torch.xpu.is_available():
-            return True
-        else:
-            return False
+        # if hasattr(torch, "xpu") and torch.xpu.is_available():
+        #     return True
+        # else:
+        #     return False
+        return False
 
     def use_fp32_config(self):
         for config_file in version_config_list:
@@ -76,90 +78,97 @@ class Config:
             f.write(strr)
 
     def device_config(self) -> tuple:
-        if torch.cuda.is_available():
-            if self.has_xpu():
-                self.device = self.instead = "xpu:0"
-                self.is_half = True
-            i_device = int(self.device.split(":")[-1])
-            self.gpu_name = torch.cuda.get_device_name(i_device)
-            if (
-                ("16" in self.gpu_name and "V100" not in self.gpu_name.upper())
-                or "P40" in self.gpu_name.upper()
-                or "P10" in self.gpu_name.upper()
-                or "1060" in self.gpu_name
-                or "1070" in self.gpu_name
-                or "1080" in self.gpu_name
-            ):
-                self.is_half = False
-                self.use_fp32_config()
-            self.gpu_mem = int(
-                torch.cuda.get_device_properties(i_device).total_memory
-                / 1024
-                / 1024
-                / 1024
-                + 0.4
-            )
-            if self.gpu_mem <= 4:
-                with open("rvc/train/preprocess/preprocess.py", "r") as f:
-                    strr = f.read().replace("3.7", "3.0")
-                with open("rvc/train/preprocess/preprocess.py", "w") as f:
-                    f.write(strr)
-        elif self.has_mps():
-            print("No supported Nvidia GPU found")
-            self.device = self.instead = "mps"
-            self.is_half = False
-            self.use_fp32_config()
-        else:
-            print("No supported Nvidia GPU found")
-            self.device = self.instead = "cpu"
-            self.is_half = False
-            self.use_fp32_config()
+        # if torch.cuda.is_available():
+        #     if self.has_xpu():
+        #         self.device = self.instead = "xpu:0"
+        #         self.is_half = True
+        #     i_device = int(self.device.split(":")[-1])
+        #     self.gpu_name = torch.cuda.get_device_name(i_device)
+        #     if (
+        #         ("16" in self.gpu_name and "V100" not in self.gpu_name.upper())
+        #         or "P40" in self.gpu_name.upper()
+        #         or "P10" in self.gpu_name.upper()
+        #         or "1060" in self.gpu_name
+        #         or "1070" in self.gpu_name
+        #         or "1080" in self.gpu_name
+        #     ):
+        #         self.is_half = False
+        #         self.use_fp32_config()
+        #     self.gpu_mem = int(
+        #         torch.cuda.get_device_properties(i_device).total_memory
+        #         / 1024
+        #         / 1024
+        #         / 1024
+        #         + 0.4
+        #     )
+        #     if self.gpu_mem <= 4:
+        #         with open("rvc/train/preprocess/preprocess.py", "r") as f:
+        #             strr = f.read().replace("3.7", "3.0")
+        #         with open("rvc/train/preprocess/preprocess.py", "w") as f:
+        #             f.write(strr)
+        # elif self.has_mps():
+        #     print("No supported Nvidia GPU found")
+        #     self.device = self.instead = "mps"
+        #     self.is_half = False
+        #     self.use_fp32_config()
+        # else:
+        #     print("No supported Nvidia GPU found")
+        #     self.device = self.instead = "cpu"
+        #     self.is_half = False
+        #     self.use_fp32_config()
 
-        if self.n_cpu == 0:
-            self.n_cpu = cpu_count()
+        # if self.n_cpu == 0:
+        #     self.n_cpu = cpu_count()
 
-        if self.is_half:
-            x_pad = 3
-            x_query = 10
-            x_center = 60
-            x_max = 65
-        else:
-            x_pad = 1
-            x_query = 6
-            x_center = 38
-            x_max = 41
+        # if self.is_half:
+        #     x_pad = 3
+        #     x_query = 10
+        #     x_center = 60
+        #     x_max = 65
+        # else:
+        #     x_pad = 1
+        #     x_query = 6
+        #     x_center = 38
+        #     x_max = 41
 
-        if self.gpu_mem is not None and self.gpu_mem <= 4:
-            x_pad = 1
-            x_query = 5
-            x_center = 30
-            x_max = 32
+        # if self.gpu_mem is not None and self.gpu_mem <= 4:
+        #     x_pad = 1
+        #     x_query = 5
+        #     x_center = 30
+        #     x_max = 32
+        
+        x_pad = 1
+        x_query = 5
+        x_center = 30
+        x_max = 32
 
         return x_pad, x_query, x_center, x_max
 
 
 def max_vram_gpu(gpu):
-    if torch.cuda.is_available():
-        gpu_properties = torch.cuda.get_device_properties(gpu)
-        total_memory_gb = round(gpu_properties.total_memory / 1024 / 1024 / 1024)
-        return total_memory_gb
-    else:
-        return "0"
+    # if torch.cuda.is_available():
+    #     gpu_properties = torch.cuda.get_device_properties(gpu)
+    #     total_memory_gb = round(gpu_properties.total_memory / 1024 / 1024 / 1024)
+    #     return total_memory_gb
+    # else:
+    #     return "0"
+    return "0"
 
 
 def get_gpu_info():
-    ngpu = torch.cuda.device_count()
-    gpu_infos = []
-    if torch.cuda.is_available() or ngpu != 0:
-        for i in range(ngpu):
-            gpu_name = torch.cuda.get_device_name(i)
-            mem = int(
-                torch.cuda.get_device_properties(i).total_memory / 1024 / 1024 / 1024
-                + 0.4
-            )
-            gpu_infos.append("%s: %s %s GB" % (i, gpu_name, mem))
-    if len(gpu_infos) > 0:
-        gpu_info = "\n".join(gpu_infos)
-    else:
-        gpu_info = "Unfortunately, there is no compatible GPU available to support your training."
+    # ngpu = torch.cuda.device_count()
+    # gpu_infos = []
+    # if torch.cuda.is_available() or ngpu != 0:
+    #     for i in range(ngpu):
+    #         gpu_name = torch.cuda.get_device_name(i)
+    #         mem = int(
+    #             torch.cuda.get_device_properties(i).total_memory / 1024 / 1024 / 1024
+    #             + 0.4
+    #         )
+    #         gpu_infos.append("%s: %s %s GB" % (i, gpu_name, mem))
+    # if len(gpu_infos) > 0:
+    #     gpu_info = "\n".join(gpu_infos)
+    # else:
+    #     gpu_info = "Unfortunately, there is no compatible GPU available to support your training."
+    gpu_info = "Unfortunately, there is no compatible GPU available to support your training."
     return gpu_info

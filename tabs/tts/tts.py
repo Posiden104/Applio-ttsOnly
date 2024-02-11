@@ -5,12 +5,18 @@ import json
 import shutil
 import datetime
 import random
+import ffmpeg
+import math
 
 from core import (
     run_tts_script,
 )
 
 from assets.i18n.i18n import I18nAuto
+
+from utils.console import print_step, print_substep
+from video_creation.background import chop_background
+from video_creation.final_video import make_final_video
 
 i18n = I18nAuto()
 
@@ -26,6 +32,7 @@ audio_root_relative = os.path.relpath(audio_root, now_dir)
 max_parts = 10
 parts = []
 use_json = False
+background_config = {'video': ("", "cluster_truck.mp4", "No Copyright Gameplay", "")}
 
 sup_audioext = {
     "wav",
@@ -69,7 +76,6 @@ audio_paths = [
     and "_output" not in name
 ]
 
-
 def change_choices():
     names = [
         os.path.join(root, file)
@@ -102,7 +108,6 @@ def change_choices():
         {"choices": sorted(audio_paths), "__type__": "update"},
     )
 
-
 def get_indexes():
     indexes_list = [
         os.path.join(dirpath, filename)
@@ -112,7 +117,6 @@ def get_indexes():
     ]
 
     return indexes_list if indexes_list else ""
-
 
 def match_index(model_file: str) -> tuple:
     model_files_trip = re.sub(r"\.pth|\.onnx$", "", model_file)
@@ -163,7 +167,6 @@ def match_index(model_file: str) -> tuple:
 
     return ""
 
-
 def save_to_wav(record_button):
     if record_button is None:
         pass
@@ -175,7 +178,6 @@ def save_to_wav(record_button):
         shutil.move(path_to_file, target_path)
         return target_path
 
-
 def save_to_wav2(upload_audio):
     file_path = upload_audio
     target_path = os.path.join(audio_root_relative, os.path.basename(file_path))
@@ -186,14 +188,12 @@ def save_to_wav2(upload_audio):
     shutil.copy(file_path, target_path)
     return target_path
 
-
 def delete_outputs():
     for root, _, files in os.walk(audio_root_relative, topdown=False):
         for name in files:
             if name.endswith(tuple(sup_audioext)) and name.__contains__("_output"):
                 os.remove(os.path.join(root, name))
     gr.Info(f"Outputs cleared!")
-
 
 def process_input(file_path):
     with open(file_path, "r") as file:
@@ -224,10 +224,9 @@ def prepare_tts_script(
     # pth_file,
     # index_path,
 ):
-    global use_json, parts
-    print(use_json)
-    print(parts)
+    global use_json, parts, background_config
     if not use_json:
+        print_step("Creating audio from text input.")
         tts_input = f'{tts_title}. Part {tts_part} of {tts_part_total}. {tts_text}' if tts_part_total > 0 else f'{tts_title}. {tts_text}'
         return run_tts_script(
             tts_input,
@@ -243,8 +242,12 @@ def prepare_tts_script(
             # index_path,
         )
     else:
+        print_step("Creating audio from JSON input.")
         for i, tts_body in enumerate(parts):
+            print_substep(f'Creating audio for step {i}')
             tts_input =f'{tts_title}. {tts_body}'
+            title = f'{tts_title}_pt{i + 1}'
+            output_path = os.path.join(output_tts_path, f'{title}.wav')
             result = run_tts_script(
                 tts_input,
                 tts_voice,
@@ -253,11 +256,17 @@ def prepare_tts_script(
                 index_rate,
                 hop_length,
                 f0method,
-                os.path.join(output_tts_path, f'{tts_title}_pt{i + 1}.wav'),
+                output_path,
                 # output_rvc_path,
                 # pth_file,
                 # index_path,
             )
+
+            audio_length = float(ffmpeg.probe(result[1])["format"]["duration"])
+            audio_length = math.ceil(audio_length)
+
+            chop_background(background_config, audio_length, title.replace(" ", "_"))
+            # make_final_video(number_of_comments, length, reddit_object, bg_config)
         return result
 
 def tts_tab():
