@@ -7,6 +7,7 @@ import datetime
 import random
 import ffmpeg
 import math
+from pathlib import Path
 
 from core import (
     run_tts_script,
@@ -17,6 +18,7 @@ from assets.i18n.i18n import I18nAuto
 from utils.console import print_step, print_substep
 from video_creation.background import chop_background
 from video_creation.final_video import make_final_video
+
 
 i18n = I18nAuto()
 
@@ -247,7 +249,9 @@ def prepare_tts_script(
             print_substep(f'Creating audio for step {i}')
             tts_input =f'{tts_title}. {tts_body}'
             title = f'{tts_title}_pt{i + 1}'
-            output_path = os.path.join(output_tts_path, f'{title}.wav')
+            folder_title = title.replace(" ", "_")
+            Path(f"assets/temp/{folder_title}").mkdir(parents=True, exist_ok=True)
+            output_path = os.path.join(f"./assets/temp/{folder_title}", f'{title}.wav')
             result = run_tts_script(
                 tts_input,
                 tts_voice,
@@ -265,9 +269,9 @@ def prepare_tts_script(
             audio_length = float(ffmpeg.probe(result[1])["format"]["duration"])
             audio_length = math.ceil(audio_length)
 
-            chop_background(background_config, audio_length, title.replace(" ", "_"))
-            # make_final_video(number_of_comments, length, reddit_object, bg_config)
-        return result
+            chop_background(background_config, audio_length, folder_title)
+            make_final_video(audio_length, folder_title, result[1], output_tts_path)
+        return result[0]
 
 def tts_tab():
     default_weight = random.choice(names) if names else ""
@@ -438,7 +442,6 @@ def tts_tab():
 
     with gr.Row():  # Defines output info + output audio download after conversion
         vc_output1 = gr.Textbox(label=i18n("Output Information"))
-        vc_output2 = gr.Audio(label=i18n("Export Audio"))
 
     # refresh_button.click(
     #     fn=change_choices,
@@ -469,5 +472,5 @@ def tts_tab():
             # model_file,
             # index_file,
         ],
-        outputs=[vc_output1, vc_output2],
+        outputs=[vc_output1],
     )

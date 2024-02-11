@@ -47,7 +47,7 @@ def run_tts_script(
     ]
 
     subprocess.run(command_tts)
-    return f"Text {tts_text} synthesized successfully.", output_tts_path
+    return f"Video created successfully.", output_tts_path
 
 
 # Download
