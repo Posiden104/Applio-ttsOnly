@@ -52,7 +52,6 @@ def get_start_and_end_times(video_length: int, length_of_clip: int) -> Tuple[int
 def get_background_config(mode: str):
     """Fetch the background/s configuration"""
     choice = random.choice(list(background_options[mode].keys()))
-    choice = "cluster-truck" # testing only TODO: remove
     return background_options[mode][choice]
 
 
@@ -103,16 +102,16 @@ def download_background_audio(background_config: Tuple[str, str, str]):
     print_substep("Background audio downloaded successfully! 🎉", style="bold green")
 
 
-def chop_background(background_config: Dict[str, Tuple], video_length: int, title: str):
+def chop_background(background_config: Tuple, video_length: int, title: str):
     """Generates the background audio and footage to be used in the video and writes it to assets/temp/background.mp3 and assets/temp/background.mp4
 
     Args:
-        background_config (Dict[str,Tuple]]) : Current background configuration
+        background_config (Tuple) : Current background configuration
         video_length (int): Length of the clip where the background footage is to be taken out of
     """
 
     print_step("Finding a spot in the backgrounds video to chop...✂️")
-    video_choice = f"{background_config['video'][2]}-{background_config['video'][1]}"
+    video_choice = f"{background_config[2]}-{background_config[1]}"
     background_video = VideoFileClip(f"assets/backgrounds/video/{video_choice}")
     start_time_video, end_time_video = get_start_and_end_times(
         video_length, background_video.duration
@@ -135,7 +134,7 @@ def chop_background(background_config: Dict[str, Tuple], video_length: int, titl
             new = video.subclip(start_time_video, end_time_video)
             new.write_videofile(f"assets/temp/{title}/background.mp4")
     print_substep("Background video chopped successfully!", style="bold green")
-    return background_config["video"][2]
+    return background_config[2]
 
 
 # Create a tuple for downloads background (background_audio_options, background_video_options)

@@ -16,7 +16,11 @@ from core import (
 from assets.i18n.i18n import I18nAuto
 
 from utils.console import print_step, print_substep
-from video_creation.background import chop_background
+from video_creation.background import (
+    download_background_video,
+    chop_background,
+    get_background_config,
+)
 from video_creation.final_video import make_final_video
 
 
@@ -34,7 +38,6 @@ audio_root_relative = os.path.relpath(audio_root, now_dir)
 max_parts = 10
 parts = []
 use_json = False
-background_config = {'video': ("", "cluster_truck.mp4", "No Copyright Gameplay", "")}
 
 sup_audioext = {
     "wav",
@@ -227,6 +230,8 @@ def prepare_tts_script(
     # index_path,
 ):
     global use_json, parts, background_config
+    background_config = get_background_config("video")
+    download_background_video(background_config)
     if not use_json:
         print_step("Creating audio from text input.")
         tts_input = f'{tts_title}. Part {tts_part} of {tts_part_total}. {tts_text}' if tts_part_total > 0 else f'{tts_title}. {tts_text}'

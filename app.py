@@ -18,13 +18,6 @@ import assets.themes.loadThemes as loadThemes
 from assets.i18n.i18n import I18nAuto
 import assets.installation_checker as installation_checker
 
-from video_creation.background import (
-    download_background_video,
-    chop_background,
-    get_background_config,
-)
-from video_creation.final_video import make_final_video
-
 i18n = I18nAuto()
 installation_checker.check_installation()
 logging.getLogger("uvicorn").disabled = True
@@ -74,7 +67,7 @@ with gr.Blocks(theme=my_applio, title="Applio") as Applio:
 
 
 if __name__ == "__main__":
-    download_background_video(get_background_config("video"))
+    # download_background_video(get_background_config("video"))
     Applio.launch(
         favicon_path="assets/ICON.ico",
         share="--share" in sys.argv,
