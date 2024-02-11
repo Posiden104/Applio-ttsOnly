@@ -246,7 +246,7 @@ def prepare_tts_script(
     else:
         print_step("Creating audio from JSON input.")
         for i, tts_body in enumerate(parts):
-            print_substep(f'Creating audio for step {i}')
+            print_substep(f'Creating audio for part {i}')
             tts_input =f'{tts_title}. {tts_body}'
             title = f'{tts_title}_pt{i + 1}'
             folder_title = title.replace(" ", "_")
@@ -269,9 +269,10 @@ def prepare_tts_script(
             audio_length = float(ffmpeg.probe(result[1])["format"]["duration"])
             audio_length = math.ceil(audio_length)
 
+            print_substep(f"Createing video for part {i}")
             chop_background(background_config, audio_length, folder_title)
             make_final_video(audio_length, folder_title, result[1], output_tts_path)
-        return result[0]
+        return f'{len(parts)} videos created successfully'
 
 def tts_tab():
     default_weight = random.choice(names) if names else ""
